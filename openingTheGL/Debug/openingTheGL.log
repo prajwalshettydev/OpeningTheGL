@@ -1,0 +1,5 @@
+﻿D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(1273,5): warning MSB8012: TargetPath(C:\LightSpeed\OpenGl\OpeningTheGL\Debug\openingTheGL.exe) does not match the Linker's OutputFile property value (). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\LightSpeed\OpenGl\OpeningTheGL\Debug\vc120.pdb'; linking object as if no debug info
+  openingTheGL.vcxproj -> C:\LightSpeed\OpenGl\OpeningTheGL\Debug\openingTheGL.exe
