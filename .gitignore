@@ -6,7 +6,11 @@
 *.user
 *.sln.docstates
 
+# Visual Studio cache directory
+.vs/
+
 # Build results
+
 
 # Roslyn cache directories
 *.ide/

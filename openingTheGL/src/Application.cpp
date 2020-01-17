@@ -21,6 +21,7 @@ struct ShaderProgramSource
 	std::string FragmentSource;
 };
 
+// a util fn that goes reads a file line by line and divides and stores it two different shader strings
 static ShaderProgramSource ParseShader(const std::string& filePath) {
 	std::ifstream stream(filePath);
 
@@ -39,7 +40,7 @@ static ShaderProgramSource ParseShader(const std::string& filePath) {
 			else if (line.find("fragment") != std::string::npos)
 				type = ShaderType::FRAGMENT;
 		}
-		else
+		else if(type != ShaderType::NONE)
 		{
 			ss[(int)type] << line << '\n';
 		}
@@ -160,6 +161,7 @@ int main(void)
 	//http://docs.gl/gl4/glBindBuffer
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	
+	//Fill Buffer with the data
 	//http://docs.gl/gl4/glBufferData
 	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
 
@@ -167,25 +169,20 @@ int main(void)
 	//http://docs.gl/gl4/glEnableVertexAttribArray
 	glEnableVertexAttribArray(0);
 
-	//http://docs.gl/gl4/glVertexAttribPointer
+	//Define each attrib in the data which inturn is in the buffer
 	//ip1: start
 	//ip2: for eg, how many data blocks at once(currently float), so for a 2D position its 2 float blocks
 	//ip5: data total size
 	//offset from start of attrib array
+	//http://docs.gl/gl4/glVertexAttribPointer
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-
-	std::cout << "vertex" << std::endl;
-	std::cout << source.VertexSource << std::endl;
-	std::cout << "fragment" << std::endl;
-	std::cout << source.FragmentSource << std::endl;
 	
-
-	//unsigned int shader = CreateShader(vertexShader, fragementShader);
+	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 	//installs the program object specified by program as part of current rendering state.
 	//http://docs.gl/gl4/glUseProgram
-	//glUseProgram(shader);
+	glUseProgram(shader);
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -206,7 +203,7 @@ int main(void)
 		glfwPollEvents();
 	}
 
-	//glDeleteProgram(shader);
+	glDeleteProgram(shader);
 
 	glfwTerminate();
 	return 0;
