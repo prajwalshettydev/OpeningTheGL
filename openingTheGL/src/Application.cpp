@@ -144,11 +144,20 @@ int main(void)
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	float positions[6] = {
-		-0.5f, -0.5f,
-		0.0f, 0.5f,
-		0.5f, -0.5f,
+	float positions[] = {
+		-0.5f, -0.5f, //0
+		0.5f, -0.5f, //1 
+		0.5f, 0.5f, //2
+		-0.5f, 0.5f, //3
 	};
+
+	unsigned int indices[] = {
+		0,1 ,2,
+		2,3,0
+	};
+
+#pragma region Creating Vertex Buffer
+
 
 	unsigned int buffer;
 	//create a new buffer in gpu,
@@ -163,7 +172,7 @@ int main(void)
 	
 	//Fill Buffer with the data
 	//http://docs.gl/gl4/glBufferData
-	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * 2 *  sizeof(float), positions, GL_STATIC_DRAW);
 
 	//the vertext attrib array need to be enabled to be used
 	//http://docs.gl/gl4/glEnableVertexAttribArray
@@ -176,6 +185,33 @@ int main(void)
 	//offset from start of attrib array
 	//http://docs.gl/gl4/glVertexAttribPointer
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+
+#pragma endregion
+
+#pragma region Creating Index Buffer
+
+	//Index Buffer Object
+	unsigned int ibo;
+
+	//create a new buffer in gpu,
+	//ip1: 1 is the number of buffers to create, 
+	//ip2: takes a memory pointer to store the id of the buffer, so if you want to store the bufferID in variable called buffer, then pass its address by using "&" as suffix.
+	//http://docs.gl/gl4/glGenBuffers
+	glGenBuffers(1, &ibo);
+
+	//After creating the buffer, u need to select the buffer which is called "Binding" in opengl
+	//GL_ELEMENT_ARRAY_BUFFER is a slot ofr index buffers
+	//http://docs.gl/gl4/glBindBuffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+	//Fill Buffer with the data
+	//It has to be unsigned.
+	//http://docs.gl/gl4/glBufferData
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+
+#pragma endregion
 
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 	
@@ -194,7 +230,10 @@ int main(void)
 		//3 represnets 3 vertices, 
 		//Draw Call, draws the current bind buffer
 		//http://docs.gl/gl4/glDrawArrays
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
