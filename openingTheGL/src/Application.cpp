@@ -245,6 +245,9 @@ int main(void)
 	//http://docs.gl/gl4/glUseProgram
 	GLCall(glUseProgram(shader));
 
+	//int location = gl
+	//glUniform4f();
+
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
