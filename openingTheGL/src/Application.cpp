@@ -11,36 +11,10 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "Renderer.h"
 
-//A macro for assertion, to add a breakpoint when error is thrown
-#define ASSERT(x) if (!(x))  __debugbreak();
-
-//A macro that adds a before and after functions for function x, I.e in our case, call Clear error before x and then calls GllogCall after x
-//in GLLogCall(#x, __FILE__, __LINE__):
-//"#x" is name/string of the function x, __File__ gives the file name current function is running and __line_ gives current line of execution
-//"\" specifies the compiler to ignore the new line character
-//
-//This GLCall() macro will be added to every single opengl call we are doing in this function so that every time there is an error,in the call, we can get a stack trace and a breakpoint, Helps in debugging
-#ifdef DEBUG
-#define GLCall(x) GLClearError();\
-		x;\
-		ASSERT(GLLogCall(#x, __FILE__, __LINE__))
-#else
-#define GLCall(x) x
-#endif
-
-static void GLClearError()
-{
-	while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLLogCall(const char* function, const char* file, int line) {
-	while (GLenum error = glGetError()) {
-		std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file << ":" << line << std::endl;
-		return false;
-	}
-	return true;
-}
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 struct ShaderProgramSource
 {
@@ -181,148 +155,112 @@ int main(void)
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	float positions[] = {
-		-0.5f, -0.5f, //0
-		0.5f, -0.5f, //1
-		0.5f, 0.5f, //2
-		-0.5f, 0.5f, //3
-	};
+	{
+		float positions[] = {
+			-0.5f, -0.5f, //0
+			0.5f, -0.5f, //1
+			0.5f, 0.5f, //2
+			-0.5f, 0.5f, //3
+		};
 
-	unsigned int indices[] = {
-		0,1 ,2,
-		2,3,0
-	};
+		unsigned int indices[] = {
+			0,1 ,2,
+			2,3,0
+		};
 
 #pragma region Creating A Vertex Array
-	unsigned int vao;
-	//create a new VertexArray,
-	GLCall(glGenVertexArrays(1, &vao));
-	//After creating the array, u need to select the array which is called "Binding" in opengl
-	GLCall(glBindVertexArray(vao));
-	//after binding the vertex array, in the next set of code you are binding a vertex buffer and defining attributes' structure in the vertex buffer,
-	//Which will in turn be linked to the just created vertex array so that we can eliminate calling vertex attribute setup function every frame
+		unsigned int vao;
+		//create a new VertexArray,
+		GLCall(glGenVertexArrays(1, &vao));
+		//After creating the array, u need to select the array which is called "Binding" in opengl
+		GLCall(glBindVertexArray(vao));
+		//after binding the vertex array, in the next set of code you are binding a vertex buffer and defining attributes' structure in the vertex buffer,
+		//Which will in turn be linked to the just created vertex array so that we can eliminate calling vertex attribute setup function every frame
 
 #pragma endregion
+
+		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
 #pragma region Creating Vertex Buffer
 
-	unsigned int buffer;
-	//create a new buffer in gpu,
-	//ip1: 1 is the number of buffers to create,
-	//ip2: takes a memory pointer to store the id of the buffer, so if you want to store the bufferID in variable called buffer, then pass its address by using "&" as suffix.
-	//http://docs.gl/gl4/glGenBuffers
-	GLCall(glGenBuffers(1, &buffer));
+		//the vertex attribute array need to be enabled to be used
+		//http://docs.gl/gl4/glEnableVertexAttribArray
+		GLCall(glEnableVertexAttribArray(0));
 
-	//After creating the buffer, u need to select the buffer which is called "Binding" in opengl
-	//http://docs.gl/gl4/glBindBuffer
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-
-	//Fill Buffer with the data
-	//http://docs.gl/gl4/glBufferData
-	GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
-
-	//the vertex attribute array need to be enabled to be used
-	//http://docs.gl/gl4/glEnableVertexAttribArray
-	GLCall(glEnableVertexAttribArray(0));
-
-	//Define each attribute in the data which in turn is in the buffer
-	//ip1: start
-	//ip2: for example, how many data blocks at once(currently float), so for a 2D position its 2 float blocks
-	//ip5: data total size
-	//offset from start of attribute array
-	//http://docs.gl/gl4/glVertexAttribPointer
-	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
+		//Define each attribute in the data which in turn is in the buffer
+		//ip1: start
+		//ip2: for example, how many data blocks at once(currently float), so for a 2D position its 2 float blocks
+		//ip5: data total size
+		//offset from start of attribute array
+		//http://docs.gl/gl4/glVertexAttribPointer
+		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
 
 #pragma endregion
 
-#pragma region Creating Index Buffer
+		IndexBuffer ib(indices, 6);
 
-	//Index Buffer Object
-	unsigned int ibo;
+		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 
-	//create a new buffer in gpu,
-	//ip1: 1 is the number of buffers to create,
-	//ip2: takes a memory pointer to store the id of the buffer, so if you want to store the bufferID in variable called buffer, then pass its address by using "&" as suffix.
-	//http://docs.gl/gl4/glGenBuffers
-	GLCall(glGenBuffers(1, &ibo));
-
-	//After creating the buffer, u need to select the buffer which is called "Binding" in opengl
-	//GL_ELEMENT_ARRAY_BUFFER is a slot for index buffers
-	//http://docs.gl/gl4/glBindBuffer
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-
-	//Fill Buffer with the data
-	//It has to be unsigned.
-	//http://docs.gl/gl4/glBufferData
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
-
-#pragma endregion
-
-	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-
-	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-	//installs the program object specified by program as part of current rendering state.
-	//http://docs.gl/gl4/glUseProgram
-	GLCall(glUseProgram(shader));
-
-	//returns an integer that represents the location of a specific uniform variable within a program object.
-	//http://docs.gl/gl4/glGetUniformLocation
-	GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-	ASSERT(location != -1);
-
-	//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
-	//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
-	//http://docs.gl/gl4/glUniform
-	GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
-
-	//Unbind the program, vertex buffer and the index buffer. 
-	//and later in update you can set them, for each frame
-	GLCall(glBindVertexArray(0));
-	GLCall(glUseProgram(0));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-	float r = 0.0f;
-	float increment = 0.05f;
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window))
-	{
-		/* Render here */
-		//http://docs.gl/gl4/glClear
-		GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
-		//first set the program and its uniforms(i.e for example "u_color") 
+		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+		//installs the program object specified by program as part of current rendering state.
+		//http://docs.gl/gl4/glUseProgram
 		GLCall(glUseProgram(shader));
-		GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-		//the bind the index buffer
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+		//returns an integer that represents the location of a specific uniform variable within a program object.
+		//http://docs.gl/gl4/glGetUniformLocation
+		GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+		ASSERT(location != -1);
 
-		//then bind the vertex array
-		GLCall(glBindVertexArray(vao));
+		//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
+		//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
+		//http://docs.gl/gl4/glUniform
+		GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-		// render primitives from array data
-		// specifies multiple geometric primitives with very few subroutine calls.
-		// http://docs.gl/gl4/glDrawElements
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+		//Unbind the program, vertex buffer and the index buffer.
+		//and later in update you can set them, for each frame
+		GLCall(glBindVertexArray(0));
+		GLCall(glUseProgram(0));
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+		
+		float r = 0.0f;
+		float increment = 0.05f;
+		/* Loop until the user closes the window */
+		while (!glfwWindowShouldClose(window))
+		{
+			/* Render here */
+			//http://docs.gl/gl4/glClear
+			GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-		if (r > 1.0f)
-			increment = -0.05f;
-		else if (r < 0.05f)
-			increment = 0.05f;
+			//first set the program and its uniforms(i.e for example "u_color")
+			GLCall(glUseProgram(shader));
+			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-		r += increment;
+			//then bind the vertex array
+			GLCall(glBindVertexArray(vao));
+			ib.Bind();
 
-		/* Swap front and back buffers */
-		GLCall(glfwSwapBuffers(window));
+			// render primitives from array data
+			// specifies multiple geometric primitives with very few subroutine calls.
+			// http://docs.gl/gl4/glDrawElements
+			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
-		/* Poll for and process events */
-		GLCall(glfwPollEvents());
+			if (r > 1.0f)
+				increment = -0.05f;
+			else if (r < 0.05f)
+				increment = 0.05f;
+
+			r += increment;
+
+			/* Swap front and back buffers */
+			GLCall(glfwSwapBuffers(window));
+
+			/* Poll for and process events */
+			GLCall(glfwPollEvents());
+		}
+
+		GLCall(glDeleteProgram(shader));
 	}
-
-	GLCall(glDeleteProgram(shader));
-
-	glfwTerminate();
+	GLCall(glfwTerminate());
 	return 0;
 }
