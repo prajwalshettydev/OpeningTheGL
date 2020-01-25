@@ -153,6 +153,15 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 
+	//setting opengl version to 3.3
+	//https://www.glfw.org/docs/latest/window_guide.html#window_hints_ctx
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+	//Note: u cant set the GLFW_OPENGL_PROFILE to CORE without having a vertex array setup
+	//https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
 	if (!window)
@@ -163,6 +172,9 @@ int main(void)
 
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
+
+	//enable vsync
+	glfwSwapInterval(1);
 
 	if (glewInit() != GLEW_OK)
 		std::cout << "Error!" << std::endl;
@@ -180,6 +192,17 @@ int main(void)
 		0,1 ,2,
 		2,3,0
 	};
+
+#pragma region Creating A Vertex Array
+	unsigned int vao;
+	//create a new VertexArray,
+	GLCall(glGenVertexArrays(1, &vao));
+	//After creating the array, u need to select the array which is called "Binding" in opengl
+	GLCall(glBindVertexArray(vao));
+	//after binding the vertex array, in the next set of code you are binding a vertex buffer and defining attributes' structure in the vertex buffer,
+	//Which will in turn be linked to the just created vertex array so that we can eliminate calling vertex attribute setup function every frame
+
+#pragma endregion
 
 #pragma region Creating Vertex Buffer
 
@@ -250,8 +273,18 @@ int main(void)
 	//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
 	//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
 	//http://docs.gl/gl4/glUniform
-	GLCall(glUniform4f(location, 0.2f, 0.3f, 0.8f, 1.0f));
+	GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
+	//Unbind the program, vertex buffer and the index buffer. 
+	//and later in update you can set them, for each frame
+	GLCall(glBindVertexArray(0));
+	GLCall(glUseProgram(0));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+	float r = 0.0f;
+	float increment = 0.05f;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
@@ -259,10 +292,27 @@ int main(void)
 		//http://docs.gl/gl4/glClear
 		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
+		//first set the program and its uniforms(i.e for example "u_color") 
+		GLCall(glUseProgram(shader));
+		GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+
+		//the bind the index buffer
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+
+		//then bind the vertex array
+		GLCall(glBindVertexArray(vao));
+
 		// render primitives from array data
 		// specifies multiple geometric primitives with very few subroutine calls.
 		// http://docs.gl/gl4/glDrawElements
 		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+		if (r > 1.0f)
+			increment = -0.05f;
+		else if (r < 0.05f)
+			increment = 0.05f;
+
+		r += increment;
 
 		/* Swap front and back buffers */
 		GLCall(glfwSwapBuffers(window));
