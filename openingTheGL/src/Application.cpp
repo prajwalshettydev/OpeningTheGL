@@ -258,7 +258,7 @@ int main(void)
 		// render primitives from array data
 		// specifies multiple geometric primitives with very few subroutine calls.
 		// http://docs.gl/gl4/glDrawElements
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 		/* Swap front and back buffers */
 		GLCall(glfwSwapBuffers(window));
