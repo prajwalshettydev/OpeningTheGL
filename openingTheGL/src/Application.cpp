@@ -20,12 +20,16 @@
 //A macro that adds a before and after fns for function x, I.e in our case, call Clearerror before x and then calls GllogCall after x
 //in GLLogCall(#x, __FILE__, __LINE__):
 //"#x" is name/string of the function x, __File__ gives the file name current fn is running and __line_ gives currernt line of execution
-//";\" specifies the compiler to ignore the new line character
+//"\" specifies the compiler to ignore the new line character
 //
 //This GLCall() macro will be added to every single opengl call we are doing in this function so that everytime there is an error,in the call, we can get a stacktrace and a breakpoint, Helps in debugging
-#define GLCall(x) GLClearError();\
-	x;\
-	Assert(GLLogCall(#x, __FILE__, __LINE__))
+#ifdef DEBUG
+	#define GLCall(x) GLClearError();\
+		x;\
+		Assert(GLLogCall(#x, __FILE__, __LINE__))
+#else
+	#define GLCall(x) x
+#endif
 
 static void GLClearError() 
 {
@@ -57,7 +61,7 @@ static ShaderProgramSource ParseShader(const std::string& filePath) {
 	ShaderType type = ShaderType::NONE;
 	std::string line;
 	std::stringstream ss[2];
-
+	
 	while (getline(stream, line)) {
 		if (line.find("#shader") != std::string::npos) {
 			if (line.find("vertex") != std::string::npos)
@@ -82,7 +86,7 @@ static unsigned int CompileShader(unsigned int type, const std::string& source)
 
 	//pointer to data inside source
 	const char* src = source.c_str(); 
-
+	
 	//http://docs.gl/gl4/glShaderSource
 	//Replaces the source code in a shader object
 	GLCall(glShaderSource(id, 1, &src, nullptr));
@@ -91,6 +95,7 @@ static unsigned int CompileShader(unsigned int type, const std::string& source)
 	//Compiles a shader object
 	GLCall(glCompileShader(id));
 	
+
 	int result;
 	//returns in params the value of a parameter for a specific shader object.
 	//http://docs.gl/gl4/glGetShader
@@ -100,7 +105,7 @@ static unsigned int CompileShader(unsigned int type, const std::string& source)
 		int length;
 		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
 		//c++ doesnt allow message[length] since length is not a const, hence using alloca
-		char* message = (char*)alloca(length * sizeof(char));
+		char* message = (char*)_malloca(length * sizeof(char));
 
 		GLCall(glGetShaderInfoLog(id, length, &length, message));
 
@@ -122,11 +127,11 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
 	unsigned int program = glCreateProgram();
 	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
 	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
+	
 	//Attaches a shader object to a program object
 	GLCall(glAttachShader(program, vs));
 	GLCall(glAttachShader(program, fs));
-
+	
 	//glLinkProgram links the program object specified by program. If any shader objects of type GL_VERTEX_SHADER are attached to program, 
 	//they will be used to create an executable that will run on the programmable vertex processor. If any shader objects of type GL_FRAGMENT_SHADER are attached to program, 
 	//they will be used to create an executable that will run on the programmable fragment processor.
@@ -180,17 +185,17 @@ int main(void)
 		0,1 ,2,
 		2,3,0
 	};
-
+	
 #pragma region Creating Vertex Buffer
 
-
+	
 	unsigned int buffer;
 	//create a new buffer in gpu,
 	//ip1: 1 is the number of buffers to create, 
 	//ip2: takes a memory pointer to store the id of the buffer, so if you want to store the bufferID in variable called buffer, then pass its address by using "&" as suffix.
 	//http://docs.gl/gl4/glGenBuffers
 	GLCall(glGenBuffers(1, &buffer));
-
+	
 	//After creating the buffer, u need to select the buffer which is called "Binding" in opengl
 	//http://docs.gl/gl4/glBindBuffer
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
@@ -211,14 +216,14 @@ int main(void)
 	//http://docs.gl/gl4/glVertexAttribPointer
 	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
 
-
+	
 #pragma endregion
 
 #pragma region Creating Index Buffer
 
 	//Index Buffer Object
 	unsigned int ibo;
-
+	
 	//create a new buffer in gpu,
 	//ip1: 1 is the number of buffers to create, 
 	//ip2: takes a memory pointer to store the id of the buffer, so if you want to store the bufferID in variable called buffer, then pass its address by using "&" as suffix.
@@ -237,7 +242,7 @@ int main(void)
 
 
 #pragma endregion
-
+	
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 	
 	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
@@ -254,7 +259,7 @@ int main(void)
 		/* Render here */
 		//http://docs.gl/gl4/glClear
 		GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
+		
 		// render primitives from array data
 		// specifies multiple geometric primitives with very few subroutine calls.
 		// http://docs.gl/gl4/glDrawElements
@@ -269,7 +274,7 @@ int main(void)
 
 	GLCall(glDeleteProgram(shader));
 
-	GLCall(glfwTerminate());
+	glfwTerminate();
 	return 0;
 }
 
