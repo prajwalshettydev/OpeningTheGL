@@ -14,4 +14,23 @@ bool GLLogCall(const char* function, const char* file, int line) {
 	return true;
 }
 
+void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
+{
+	//first set the program(which has the shaders as executables) and its uniforms(i.e for example "u_color")
+	shader.Bind();
 
+	va.Bind();
+	ib.Bind();
+
+	// render primitives from array data
+	// specifies multiple geometric primitives with very few subroutine calls.
+	// http://docs.gl/gl4/glDrawElements
+	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+}
+
+void Renderer::Clear() const
+{
+	/* Render here */
+	//http://docs.gl/gl4/glClear
+	GLCall(glClear(GL_COLOR_BUFFER_BIT));
+}
