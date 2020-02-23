@@ -16,109 +16,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
-
-struct ShaderProgramSource
-{
-	std::string VertexSource;
-	std::string FragmentSource;
-};
-
-// Utility function that goes reads a file line by line and divides and stores it two different shader strings
-static ShaderProgramSource ParseShader(const std::string& filePath) {
-	std::ifstream stream(filePath);
-
-	enum class ShaderType
-	{
-		NONE = -1, VERTEX = 0, FRAGMENT = 1
-	};
-	ShaderType type = ShaderType::NONE;
-	std::string line;
-	std::stringstream ss[2];
-
-	while (getline(stream, line)) {
-		if (line.find("#shader") != std::string::npos) {
-			if (line.find("vertex") != std::string::npos)
-				type = ShaderType::VERTEX;
-			else if (line.find("fragment") != std::string::npos)
-				type = ShaderType::FRAGMENT;
-		}
-		else if (type != ShaderType::NONE)
-		{
-			ss[(int)type] << line << '\n';
-		}
-	}
-
-	return { ss[0].str(), ss[1].str() };
-}
-
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-	//http://docs.gl/gl4/glCreateShader
-	//Creates a shader object
-	unsigned int id = glCreateShader(type);
-
-	//pointer to data inside source
-	const char* src = source.c_str();
-
-	//http://docs.gl/gl4/glShaderSource
-	//Replaces the source code in a shader object
-	GLCall(glShaderSource(id, 1, &src, nullptr));
-
-	//http://docs.gl/gl4/glCompileShader
-	//Compiles a shader object
-	GLCall(glCompileShader(id));
-
-	int result;
-	//returns in params the value of a parameter for a specific shader object.
-	//http://docs.gl/gl4/glGetShader
-	GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
-	if (result == GL_FALSE)
-	{
-		int length;
-		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
-		//c++ doesn't allow message[length] since length is not a const, hence using _alloc
-		char* message = (char*)_malloca(length * sizeof(char));
-
-		GLCall(glGetShaderInfoLog(id, length, &length, message));
-
-		std::cout << "Failed to compile  " << (type == GL_VERTEX_SHADER ? "Vertex" : "fragment") << "Shader!" << std::endl;
-		std::cout << message << std::endl;
-
-		GLCall(glDeleteShader(id));
-		return 0;
-	}
-
-	return id;
-}
-
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
-{
-	//glCreateProgram
-	//Creates a program object
-	unsigned int program = glCreateProgram();
-	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-	//Attaches a shader object to a program object
-	GLCall(glAttachShader(program, vs));
-	GLCall(glAttachShader(program, fs));
-
-	//glLinkProgram links the program object specified by program. If any shader objects of type GL_VERTEX_SHADER are attached to program,
-	//they will be used to create an executable that will run on the programmable vertex processor. If any shader objects of type GL_FRAGMENT_SHADER are attached to program,
-	//they will be used to create an executable that will run on the programmable fragment processor.
-	//http://docs.gl/gl4/glLinkProgram
-	GLCall(glLinkProgram(program));
-
-	//checks to see whether the executables contained in program can execute given the current OpenGL state.
-	//http://docs.gl/gl4/glValidateProgram
-	GLCall(glValidateProgram(program));
-
-	//once shaders are compiled and are part of the program, u can use the older shader objects created
-	GLCall(glDeleteShader(vs));
-	GLCall(glDeleteShader(fs));
-
-	return program;
-}
+#include "Shader.h"
 
 int main(void)
 {
@@ -178,29 +76,17 @@ int main(void)
 
 		IndexBuffer ib(indices, 6);
 
-		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+		Shader shader("res/shaders/Basic.shader");
+		shader.Bind();
+		shader.SetUnifrom4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
-		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-		//installs the program object specified by program as part of current rendering state.
-		//http://docs.gl/gl4/glUseProgram
-		GLCall(glUseProgram(shader));
-
-		//returns an integer that represents the location of a specific uniform variable within a program object.
-		//http://docs.gl/gl4/glGetUniformLocation
-		GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-		ASSERT(location != -1);
-
-		//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
-		//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
-		//http://docs.gl/gl4/glUniform
-		GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
-
+		
 		//Unbind the program, vertex buffer and the index buffer.
 		//and later in update you can set them, for each frame
-		GLCall(glBindVertexArray(0));
-		GLCall(glUseProgram(0));
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+		va.UnBind();
+		vb.Unbind();
+		ib.Unbind();
+		shader.Unbind();
 
 		float r = 0.0f;
 		float increment = 0.05f;
@@ -212,8 +98,8 @@ int main(void)
 			GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 			//first set the program and its uniforms(i.e for example "u_color")
-			GLCall(glUseProgram(shader));
-			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+			shader.Bind();
+			shader.SetUnifrom4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 
 			va.Bind();
 			ib.Bind();
@@ -236,8 +122,6 @@ int main(void)
 			/* Poll for and process events */
 			GLCall(glfwPollEvents());
 		}
-
-		GLCall(glDeleteProgram(shader));
 	}
 	GLCall(glfwTerminate());
 	return 0;
