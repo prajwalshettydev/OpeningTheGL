@@ -15,6 +15,7 @@
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "VertexArray.h"
 
 struct ShaderProgramSource
 {
@@ -168,34 +169,12 @@ int main(void)
 			2,3,0
 		};
 
-#pragma region Creating A Vertex Array
-		unsigned int vao;
-		//create a new VertexArray,
-		GLCall(glGenVertexArrays(1, &vao));
-		//After creating the array, u need to select the array which is called "Binding" in opengl
-		GLCall(glBindVertexArray(vao));
-		//after binding the vertex array, in the next set of code you are binding a vertex buffer and defining attributes' structure in the vertex buffer,
-		//Which will in turn be linked to the just created vertex array so that we can eliminate calling vertex attribute setup function every frame
-
-#pragma endregion
-
+		VertexArray va;
 		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-#pragma region Creating Vertex Buffer
-
-		//the vertex attribute array need to be enabled to be used
-		//http://docs.gl/gl4/glEnableVertexAttribArray
-		GLCall(glEnableVertexAttribArray(0));
-
-		//Define each attribute in the data which in turn is in the buffer
-		//ip1: start
-		//ip2: for example, how many data blocks at once(currently float), so for a 2D position its 2 float blocks
-		//ip5: data total size
-		//offset from start of attribute array
-		//http://docs.gl/gl4/glVertexAttribPointer
-		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
-
-#pragma endregion
+		VertexBufferLayout layout;
+		layout.Push<float>(2);
+		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
@@ -222,7 +201,7 @@ int main(void)
 		GLCall(glUseProgram(0));
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-		
+
 		float r = 0.0f;
 		float increment = 0.05f;
 		/* Loop until the user closes the window */
@@ -236,8 +215,7 @@ int main(void)
 			GLCall(glUseProgram(shader));
 			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-			//then bind the vertex array
-			GLCall(glBindVertexArray(vao));
+			va.Bind();
 			ib.Bind();
 
 			// render primitives from array data
