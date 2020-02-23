@@ -78,7 +78,7 @@ int main(void)
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
-		shader.SetUnifrom4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
 		
 		//Unbind the program, vertex buffer and the index buffer.
@@ -99,7 +99,7 @@ int main(void)
 
 			//first set the program and its uniforms(i.e for example "u_color")
 			shader.Bind();
-			shader.SetUnifrom4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 
 			va.Bind();
 			ib.Bind();

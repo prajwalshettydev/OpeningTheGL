@@ -20,7 +20,8 @@ public:
 	void Unbind() const;
 
 	//set uniforms:
-	void SetUnifrom4f(const std::string& name, float v0, float v1, float v2, float v3);
+	void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+	void SetUniform1f(const std::string& name, float value);
 private:
 
 	unsigned int m_RendererID;
@@ -31,6 +32,6 @@ private:
 	unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
 	ShaderProgramSource ParseShader(const std::string& filePath);
 	unsigned int CompileShader(unsigned int type, const std::string& source);
-	int GetUnifromLocation(const std::string& name);
+	int GetUniformLocation(const std::string& name);
 
 };

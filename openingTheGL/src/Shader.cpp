@@ -28,12 +28,16 @@ void Shader::Unbind() const
 	GLCall(glUseProgram(0));
 }
 
-void Shader::SetUnifrom4f(const std::string& name, float v0, float v1, float v2, float v3)
+void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
 {
 	//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
 	//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
 	//http://docs.gl/gl4/glUniform
-	GLCall(glUniform4f(GetUnifromLocation(name), v0,v1,v2,v3));
+	GLCall(glUniform4f(GetUniformLocation(name), v0,v1,v2,v3));
+}
+
+void Shader::SetUniform1f(const std::string& name, float value) {
+	GLCall(glUniform1f(GetUniformLocation(name), value));
 }
 
 unsigned int Shader::CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
@@ -137,7 +141,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 	return id;
 }
 
-int Shader::GetUnifromLocation(const std::string& name)
+int Shader::GetUniformLocation(const std::string& name)
 {
 	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
 		return m_UniformLocationCache[name];
