@@ -33,7 +33,12 @@ void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2,
 	//glUniform modifies the value of a uniform variable or a uniform variable array. The location of the uniform variable to be modified is specified by location,
 	//which should be a value returned by glGetUniformLocation. glUniform operates on the program object that was made part of current state by calling glUseProgram.
 	//http://docs.gl/gl4/glUniform
-	GLCall(glUniform4f(GetUniformLocation(name), v0,v1,v2,v3));
+	GLCall(glUniform4f(GetUniformLocation(name), v0, v1, v2, v3));
+}
+
+void Shader::SetUniform1i(const std::string& name, int value)
+{
+	GLCall(glUniform1i(GetUniformLocation(name), value));
 }
 
 void Shader::SetUniform1f(const std::string& name, float value) {
@@ -70,7 +75,6 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
 
 	return program;
 }
-
 
 // Utility function that goes reads a file line by line and divides and stores it two different shader strings
 ShaderProgramSource Shader::ParseShader(const std::string& filePath) {
