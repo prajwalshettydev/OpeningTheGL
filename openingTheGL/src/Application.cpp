@@ -58,9 +58,9 @@ int main(void)
 
 	{
 		float positions[] = {
-			-0.5f, -0.5f, 0.0f,0.0f,//0 => bottom left
-			0.5f, -0.5f,1.0f, 0.0f, //1 => right most edge
-			0.5f, 0.5f, 1.0f,1.0f,//2 => top right
+			-0.5f, -0.5f, 0.0f, 0.0f,//0 => bottom left
+			0.5f, -0.5f, 1.0f, 0.0f, //1 => right most edge
+			0.5f, 0.5f, 1.0f, 1.0f,//2 => top right
 			-0.5f, 0.5f, 0.0f, 1.0f //3 =>
 		};
 
@@ -68,6 +68,9 @@ int main(void)
 			0,1 ,2,
 			2,3,0
 		};
+
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 		VertexArray va;
 		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
