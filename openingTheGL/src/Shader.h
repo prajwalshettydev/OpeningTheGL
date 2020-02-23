@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include<unordered_map>
 
 
 struct ShaderProgramSource
@@ -24,7 +25,8 @@ private:
 
 	unsigned int m_RendererID;
 	std::string m_FilePath;
-	// caching for uniform
+	std::unordered_map<std::string, int> m_UniformLocationCache;
+
 
 	unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
 	ShaderProgramSource ParseShader(const std::string& filePath);

@@ -139,11 +139,16 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 
 int Shader::GetUnifromLocation(const std::string& name)
 {
+	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
+		return m_UniformLocationCache[name];
+
 	//returns an integer that represents the location of a specific uniform variable within a program object.
 	//http://docs.gl/gl4/glGetUniformLocation
 	GLCall(int location = glGetUniformLocation(m_RendererID, name.c_str()));
 
 	if (location == -1)
 		std::cout << "warning: uniform " << name << " not found" << std::endl;
+	else
+		m_UniformLocationCache[name] = location;
 	return 0;
 }
