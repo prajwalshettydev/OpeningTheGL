@@ -70,7 +70,8 @@ int main(void)
 		};
 
 		GLCall(glEnable(GL_BLEND));
-		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		//define how opengl will render alpha
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //to support transparency
 
 		VertexArray va;
 		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
@@ -84,11 +85,11 @@ int main(void)
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
-		shader.SetUniform4f("u_color", 0.8f, 0.3f, 0.8f, 1.0f);
+		//shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
 		Texture texture("res/textures/screen.png");
-		texture.Bind(0);
-		shader.SetUniform1i("u_Texture", 0);
+		texture.Bind();
+		shader.SetUniform1i("u_Texture", 0); //0 cuz we bound our texture to slot zero
 
 		//Unbind the program, vertex buffer and the index buffer.
 		//and later in update you can set them, for each frame

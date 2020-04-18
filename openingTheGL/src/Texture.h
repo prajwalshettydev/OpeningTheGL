@@ -7,6 +7,7 @@ public:
 	Texture(const std::string& path);
 	~Texture();
 
+   // typically android has 8 texture slot, opengl max 32
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 

@@ -1,9 +1,12 @@
 #shader vertex
 #version 330 core
 
+//input data into vertex shader using "in"
+//taking data defined from VertexBufferLayout
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 texCoord;
 
+//output data from vertex shader to fragment shader
 out vec2 v_TexCoord;
 
 void main()
@@ -17,6 +20,7 @@ void main()
 
 layout(location = 0) out vec4 color;
 
+//input data from vertex shader to fragment shader
 in vec2 v_TexCoord;
 
 //u_ defines a uniform variable
