@@ -9,9 +9,11 @@ layout(location = 1) in vec2 texCoord;
 //output data from vertex shader to fragment shader
 out vec2 v_TexCoord;
 
+uniform mat4 u_MVP; //Model view projection matrix
+
 void main()
 {
-	gl_Position = position;
+	gl_Position = u_MVP * position;
 	v_TexCoord = texCoord;
 };
 
