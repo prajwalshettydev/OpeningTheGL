@@ -136,11 +136,12 @@ int main(void)
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
+
 			renderer.Clear();
 			//first set the program and its uniforms(i.e for example "u_color")
 			/*shader.Bind();
 			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);*/
-
+			  
 
 			// Start the Dear ImGui frame
 			ImGui_ImplOpenGL3_NewFrame();
