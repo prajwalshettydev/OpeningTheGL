@@ -66,10 +66,10 @@ int main(void)
 
 	{
 		float positions[] = {
-			100.0f,100.0f, 0.0f, 0.0f,//0 => bottom left
-			200.0f, 100.0f, 1.0f, 0.0f, //1 => right most edge
-			200.0f, 200.0f, 1.0f, 0.5f,//2 => top right
-			100.0f, 200.0f, 0.0f, 0.5f //3 =>
+			-50.0f, -50.0f, 0.0f, 0.0f,//0 => bottom left
+			 50.0f, -50.0f, 1.0f, 0.0f, //1 => right most edge
+			 50.0f,  50.0f, 1.0f, 0.5f,//2 => top right
+			-50.0f,  50.0f, 0.0f, 0.5f //3 =>
 		};
 
 		unsigned int indices[] = {
@@ -94,7 +94,7 @@ int main(void)
 		//This matrix specifies the screen size, -2.0 is the left edge and so on
 		//https://glm.g-truc.net/0.9.2/api/a00245.html
 		glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0)); //Control camera position, i.e glm::vec3(-100, 0, 0)); is kind of camera position now
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)); //Control camera position, i.e glm::vec3(-100, 0, 0)); is kind of camera position now
 
 		// Example: consider a Vertex position vp at (100,100,0)
 		// Now multiplying it with the projection matrix will result in the VP to be converted between -1 to 1 space
@@ -124,7 +124,8 @@ int main(void)
 		//ImGui::StyleColorsClassic();
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 
-		glm::vec3 translation(200, 200, 0);
+		glm::vec3 translationA(200, 200, 0);
+		glm::vec3 translationB(400, 200, 0);
 		float r = 0.0f;
 		float increment = 0.05f;
 		/* Loop until the user closes the window */
@@ -137,14 +138,25 @@ int main(void)
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation); //Control model's position
-			glm::mat4 mvp = proj * view * model;
-			//first set the program and its uniforms(i.e for example "u_color")
 			shader.Bind();
-			shader.SetUniformMat4f("u_MVP", mvp);
-			/*shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);*/
+			{
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA); //Control model's position
+				glm::mat4 mvp = proj * view * model;
+				shader.SetUniformMat4f("u_MVP", mvp);
 
-			renderer.Draw(va, ib, shader);
+				renderer.Draw(va, ib, shader);
+			}
+			{
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB); //Control model's position
+				glm::mat4 mvp = proj * view * model;
+				shader.SetUniformMat4f("u_MVP", mvp);
+
+				renderer.Draw(va, ib, shader);
+			}
+
+
+
+			/*shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);*/
 
 			if (r > 1.0f)
 				increment = -0.05f;
@@ -155,8 +167,9 @@ int main(void)
 
 			// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 			{
-				//sending the address of x, so that y and z are one hop each away
-				ImGui::SliderFloat3("Translation", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				//sending the address of translationA.x, so that y and z are one hop each away
+				ImGui::SliderFloat3("Translation A", &translationA.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderFloat3("Translation B", &translationB.x, 0.0f, 960.0f); 
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				//ImGui::End();
